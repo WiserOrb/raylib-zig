@@ -30,6 +30,8 @@ fn getRaylib(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.buil
         .shared = options.shared,
         .linux_display_backend = options.linux_display_backend,
         .opengl_version = options.opengl_version,
+        .android_api_version = options.android_api_version,
+        .android_ndk = options.android_ndk,
     });
 
     const raylib = raylib_dep.artifact("raylib");
@@ -39,7 +41,7 @@ fn getRaylib(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.buil
         .optimize = optimize,
     });
 
-    rl.addRaygui(b, raylib, raygui_dep);
+    rl.addRaygui(b, raylib, raygui_dep, options);
 
     b.installArtifact(raylib);
     return raylib;
@@ -161,6 +163,11 @@ pub fn build(b: *std.Build) !void {
             .name = "3d_picking",
             .path = "examples/core/3d_picking.zig",
             .desc = "Shows picking in 3d mode",
+        },
+        .{
+            .name = "drop_files",
+            .path = "examples/core/drop_files.zig",
+            .desc = "Demonstrates how to implement a drop files functionality",
         },
         .{
             .name = "window_flags",
@@ -316,6 +323,7 @@ pub fn build(b: *std.Build) !void {
             // output file, so it also needs to be linked with emscripten.
             exe_lib.linkLibrary(raylib_artifact);
             const link_step = try emcc.linkWithEmscripten(b, &[_]*std.Build.Step.Compile{ exe_lib, raylib_artifact });
+            link_step.addArg("--emrun");
             link_step.addArg("--embed-file");
             link_step.addArg("resources/");
 
